@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativa SWMM · ICM · SewerGEMS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sw:  #185FA5;  --sw-l: #E6F1FB;  --sw-d: #042C53;
+  --icm: #0F6E56;  --icm-l: #E1F5EE; --icm-d: #04342C;
+  --sg:  #534AB7;  --sg-l: #EEEDFE;  --sg-d: #26215C;
+  --border: #e2e0d8;
+  --bg: #fafaf8;
+  --bg2: #f3f1eb;
+  --text: #1a1a18;
+  --muted: #6b6960;
+  --radius: 8px;
+  --font: 'IBM Plex Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 32px 24px 64px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+header { margin-bottom: 28px; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 4px; }
+.tagline { font-size: 13px; color: var(--muted); }
+
+/* Legend pills */
+.legend { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
+.pill .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pill.sw  { background: var(--sw-l);  color: var(--sw-d);  } .pill.sw  .dot { background: var(--sw);  }
+.pill.icm { background: var(--icm-l); color: var(--icm-d); } .pill.icm .dot { background: var(--icm); }
+.pill.sg  { background: var(--sg-l);  color: var(--sg-d);  } .pill.sg  .dot { background: var(--sg);  }
+
+/* Section label */
+.section-label {
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: 14px 16px 6px; background: var(--bg2);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+
+/* Table */
+.tbl-wrap { overflow-x: auto; margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+/* Header row */
+thead tr th {
+  padding: 14px 16px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600; font-size: 12px;
+  text-align: left;
+  background: var(--bg);
+}
+thead th:first-child { color: var(--muted); font-weight: 500; min-width: 160px; }
+thead th.h-sw  { color: var(--sw-d);  border-bottom-color: var(--sw);  }
+thead th.h-icm { color: var(--icm-d); border-bottom-color: var(--icm); }
+thead th.h-sg  { color: var(--sg-d);  border-bottom-color: var(--sg);  }
+thead th .sub  { font-size: 11px; font-weight: 400; opacity: .7; display: block; margin-top: 1px; }
+
+/* Body rows */
+tbody tr td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody td:first-child {
+  font-weight: 500; font-size: 12px; color: var(--muted);
+  background: var(--bg2); min-width: 160px;
+}
+tbody tr:hover td { background: #f5f3ed; }
+tbody tr:hover td:first-child { background: #edebd4; }
+
+/* Badges inside cells */
+.yes  { color: #27500A; font-weight: 500; }
+.no   { color: #993C1D; }
+.part { color: #633806; }
+.best { display: inline-block; font-size: 11px; font-weight: 600; background: #EAF3DE; color: #27500A; padding: 1px 7px; border-radius: 20px; }
+.warn-badge { display: inline-block; font-size: 11px; font-weight: 600; background: #FAECE7; color: #993C1D; padding: 1px 7px; border-radius: 20px; }
+.mid-badge  { display: inline-block; font-size: 11px; font-weight: 600; background: #FAEEDA; color: #633806; padding: 1px 7px; border-radius: 20px; }
+
+mono { font-family: var(--mono); font-size: 11px; background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 3px; }
+
+/* Score bars */
+.bar-wrap { display: flex; align-items: center; gap: 6px; }
+.bar-bg { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-label { font-size: 11px; color: var(--muted); min-width: 24px; text-align: right; }
+
+/* Footer note */
+.footnote { font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 14px; }
+
+/* Print */
+@media print {
+  body { padding: 16px; font-size: 11px; }
+  h1 { font-size: 16px; }
+  .section-label { padding: 8px 12px 4px; }
+  tbody tr td, thead tr th { padding: 6px 10px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Comparativa de herramientas de modelación de alcantarillado</h1>
+  <p class="tagline">EPA SWMM 5.2 · InfoWorks ICM (Autodesk/Innovyze) · SewerGEMS (Bentley OpenFlows)</p>
+</header>
+
+<div class="legend">
+  <span class="pill sw"><span class="dot"></span>EPA SWMM</span>
+  <span class="pill icm"><span class="dot"></span>InfoWorks ICM</span>
+  <span class="pill sg"><span class="dot"></span>SewerGEMS</span>
+</div>
+
+<div class="tbl-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Criterio</th>
+      <th class="h-sw">EPA SWMM 5.2<span class="sub">EPA / Código abierto</span></th>
+      <th class="h-icm">InfoWorks ICM<span class="sub">Autodesk / Innovyze</span></th>
+      <th class="h-sg">SewerGEMS<span class="sub">Bentley OpenFlows</span></th>
+    </tr>
+  </thead>
+
+  <!-- BLOQUE: GENERAL -->
+  <tbody>
+  <tr><td colspan="4" style="padding:0"><div class="section-label">General</div></td></tr>
+
+  <tr>
+    <td>Licencia y coste</td>
+    <td><span class="best">Gratuito</span> — EPA, código abierto. Sin restricciones.</td>
+    <td><span class="warn-badge">Caro</span> — Suscripción anual Autodesk. Requiere contrato institucional.</td>
+    <td><span class="warn-badge">Caro</span> — Suscripción Bentley SELECT. Varias plataformas.</td>
+  </tr>
+
+  <tr>
+    <td>Fabricante / origen</td>
+    <td>U.S. Environmental Protection Agency (EPA). Motor público.</td>
+    <td>Innovyze → Autodesk (adq. 2021). Parte del ecosistema Autodesk Water.</td>
+    <td>Haestad Methods → Bentley Systems. Familia OpenFlows.</td>
+  </tr>
+
+  <tr>
+    <td>Motor hidráulico</td>
+    <td>St. Venant completo (onda dinámica EPA SWMM5). Transparente y auditable.</td>
+    <td>St. Venant propio (Preissmann). 1D + 2D acoplado nativo.</td>
+    <td>SWMM5 (licenciado de EPA) + extensiones Bentley. Mismo motor que SWMM.</td>
+  </tr>
+
+  <tr>
+    <td>Formato de archivo</td>
+    <td><mono>.inp</mono> (texto plano). Editable, versionable con Git.</td>
+    <td>Base de datos propietaria <mono>.icmm</mono>. Servidor ICM Exchange.</td>
+    <td>SQLite <mono>.stsw</mono>. Un solo archivo, fácil de compartir.</td>
+  </tr>
+
+  <tr>
+    <td>Plataformas disponibles</td>
+    <td>Windows standalone. GUI o línea de comandos.</td>
+    <td>Windows standalone + integración ArcGIS / MapInfo.</td>
+    <td>Standalone, ArcGIS Pro nativo, MicroStation / AutoCAD.</td>
+  </tr>
+
+  <!-- BLOQUE: HIDRÁULICA -->
+  <tr><td colspan="4" style="padding:0"><div class="section-label">Capacidades hidráulicas</div></td></tr>
+
+  <tr>
+    <td>Tipos de simulación</td>
+    <td>Steady state, EPS (onda dinámica). Sin 2D nativo.</td>
+    <td>EPS onda dinámica 1D + 2D acoplado. Tiempo real (ICM Live).</td>
+    <td>Steady state, Gradex, EPS (onda dinámica). Sin 2D nativo.</td>
+  </tr>
+
+  <tr>
+    <td>Simulación 2D de inundación</td>
+    <td><span class="no">No nativa.</span> Requiere HEC-RAS o PCSWMM adicional.</td>
+    <td><span class="best">Nativa 1D–2D acoplada</span> con malla de elementos finitos sobre MDT. Acoplamiento automático en pozos.</td>
+    <td><span class="no">No nativa.</span> Requiere exportar a HEC-RAS u otras herramientas.</td>
+  </tr>
+
+  <tr>
+    <td>Flujo a presión (surcharge)</td>
+    <td><span class="yes">Sí.</span> Onda dinámica captura surcharge y backwater.</td>
+    <td><span class="yes">Sí.</span> St. Venant completo. HGL animado sobre perfil.</td>
+    <td><span class="yes">Sí.</span> Motor SWMM5 con opción <mono>Allow Pressure Flow</mono>.</td>
+  </tr>
+
+  <tr>
+    <td>Secciones transversales</td>
+    <td>Circular, huevo, rectangular, arco, compuesta (irregular).</td>
+    <td>Circular, huevo, rectangular, arco, herradura, compuesta, custom.</td>
+    <td>Circular, huevo, rectangular, arco, compuesta. Catálogo extenso de perfiles.</td>
+  </tr>
+
+  <tr>
+    <td>Estructuras de control</td>
+    <td>Pump, Orifice, Weir, Outlet con curvas Q-H.</td>
+    <td>Pump, Orifice, Weir, Flap Gate, Sluice Gate. Control con reglas lógicas (RTC).</td>
+    <td>Pump, Orifice, Weir, Turbine. Curvas Q-H y control por nivel.</td>
+  </tr>
+
+  <!-- BLOQUE: HIDROLOGÍA -->
+  <tr><td colspan="4" style="padding:0"><div class="section-label">Hidrología y lluvia</div></td></tr>
+
+  <tr>
+    <td>Modelos de escorrentía</td>
+    <td>Horton, Green-Ampt, CN (SCS). Manning en superficie.</td>
+    <td>Fixed C, Horton, Green-Ampt, SCS/CN, New UK (UKWIR). Runoff surfaces múltiples por subcuenca.</td>
+    <td>SWMM Runoff (Horton/GA/CN), Racional, Hidrograma unitario (SCS, Snyder, Clark), I/I.</td>
+  </tr>
+
+  <tr>
+    <td>Definición de lluvia de diseño</td>
+    <td>Time Series (tabla tiempo-intensidad). Sin curva IDF integrada.</td>
+    <td>Rainfall Event (tabla). Biblioteca UK FEH precargada. Para España: manual.</td>
+    <td><span class="best">Curva IDF integrada</span> (coef. a, b, c directo). Distribuciones: bloque alterno, SCS, Huff, Chicago.</td>
+  </tr>
+
+  <tr>
+    <td>Lluvia espacialmente variable</td>
+    <td><span class="part">Parcial.</span> Múltiples Rain Gages asignados a subcuencas.</td>
+    <td><span class="yes">Sí.</span> Rainfall Profiles con polígonos de lluvia diferenciada por zona.</td>
+    <td><span class="yes">Sí.</span> Múltiples eventos asignados por subcuenca.</td>
+  </tr>
+
+  <!-- BLOQUE: GIS -->
+  <tr><td colspan="4" style="padding:0"><div class="section-label">Integración GIS y datos</div></td></tr>
+
+  <tr>
+    <td>Importación desde GIS</td>
+    <td><span class="part">Manual / scripts.</span> Herramientas externas (swmm-api, SWMM5-EA). Sin asistente nativo.</td>
+    <td><span class="yes">Import Wizard</span> para shapefile y GDB. Mapeo de campos asistido. API Python/Ruby.</td>
+    <td><span class="best">ModelBuilder nativo</span> — asistente visual que mapea campos GIS → atributos del modelo paso a paso.</td>
+  </tr>
+
+  <tr>
+    <td>Edición GIS en tiempo real</td>
+    <td><span class="no">No.</span> Ciclo exportar → editar → reimportar.</td>
+    <td><span class="yes">Sí</span> en plataforma ArcGIS / MapInfo. REST API para publicar resultados.</td>
+    <td><span class="best">Nativa en ArcGIS Pro.</span> Edición directa sobre el mapa sin exportar.</td>
+  </tr>
+
+  <tr>
+    <td>Delineación de subcuencas</td>
+    <td><span class="no">No integrada.</span> Se hace en QGIS/ArcGIS externamente.</td>
+    <td><span class="part">Parcial.</span> Importa subcuencas desde GIS. Herramientas externas para delineación.</td>
+    <td><span class="yes">Integrada.</span> <mono>Subcatchment Delineation</mono> desde MDT dentro de la misma herramienta.</td>
+  </tr>
+
+  <tr>
+    <td>Exportación de resultados a GIS</td>
+    <td><span class="part">Limitada.</span> CSV + scripts para convertir a shapefile.</td>
+    <td><span class="yes">Directa.</span> Shapefile, GeoPackage, raster 2D. Publicación a ArcGIS Online.</td>
+    <td><span class="yes">Directa.</span> Shapefile, GeoDatabase. En ArcGIS: capas vivas actualizadas.</td>
+  </tr>
+
+  <!-- BLOQUE: ANÁLISIS Y PRODUCTIVIDAD -->
+  <tr><td colspan="4" style="padding:0"><div class="section-label">Análisis y productividad</div></td></tr>
+
+  <tr>
+    <td>Gestión de escenarios</td>
+    <td><span class="no">No integrada.</span> Archivos <mono>.inp</mono> separados por escenario.</td>
+    <td><span class="yes">Integrada.</span> Escenarios comparten datos base, almacenan solo diferencias.</td>
+    <td><span class="yes">Integrada.</span> Scenario Manager: estado actual + alternativas en un mismo archivo.</td>
+  </tr>
+
+  <tr>
+    <td>Diseño automático</td>
+    <td><span class="no">No.</span> Redimensionamiento manual tramo a tramo.</td>
+    <td><span class="no">No.</span> Iteración manual con cambio de sección y recálculo.</td>
+    <td><span class="best">Auto-Design nativo.</span> Redimensiona automáticamente tramos deficitarios según criterios de llenado y velocidad.</td>
+  </tr>
+
+  <tr>
+    <td>Tablas de resultados</td>
+    <td>Tablas básicas. Exportación a CSV. Sin personalización avanzada.</td>
+    <td>Tablas completas. <mono>Max Results</mono>. Exportación a CSV y Excel.</td>
+    <td><span class="best">FlexTables</span> — tablas totalmente configurables por el usuario. Exportación directa a Excel.</td>
+  </tr>
+
+  <tr>
+    <td>Perfil longitudinal</td>
+    <td>Long profile estático. Sin animación dinámica del HGL.</td>
+    <td>Perfil con HGL animado en el tiempo. Rojo = surcharge. Muy visual.</td>
+    <td>Perfil con HGL animado. Indicadores de color por nivel de llenado.</td>
+  </tr>
+
+  <tr>
+    <td>Calidad del agua</td>
+    <td><span class="part">Básica.</span> Acumulación-barrido, transporte de contaminantes.</td>
+    <td><span class="best">Avanzada.</span> CSO, volumen y frecuencia de vertidos, sedimentos, WQ completa.</td>
+    <td><span class="part">Básica (SWMM WQ).</span> Sin módulo avanzado de CSO.</td>
+  </tr>
+
+  <tr>
+    <td>Automatización / API</td>
+    <td><span class="yes">swmm-api (Python).</span> Control total del motor desde scripts. Libre y documentado.</td>
+    <td><span class="yes">ICM Exchange (Python/Ruby).</span> API completa para automatizar corridas, escenarios y resultados.</td>
+    <td><span class="part">WaterObjects.NET (VBA/.NET).</span> Menos extendida. Sin API Python oficial.</td>
+  </tr>
+
+  <!-- BLOQUE: CURVA DE APRENDIZAJE -->
+  <tr><td colspan="4" style="padding:0"><div class="section-label">Curva de aprendizaje y mercado</div></td></tr>
+
+  <tr>
+    <td>Facilidad de aprendizaje</td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar-bg"><div class="bar-fill" style="width:65%;background:#378ADD"></div></div>
+        <span class="bar-label">Media</span>
+      </div>
+      Interfaz sencilla. Gran comunidad y documentación gratuita.
+    </td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar-bg"><div class="bar-fill" style="width:30%;background:#1D9E75"></div></div>
+        <span class="bar-label">Alta dif.</span>
+      </div>
+      Curva empinada. Interfaz densa. Requiere formación específica.
+    </td>
+    <td>
+      <div class="bar-wrap">
+        <div class="bar-bg"><div class="bar-fill" style="width:55%;background:#7F77DD"></div></div>
+        <span class="bar-label">Media</span>
+      </div>
+      Interfaz más intuitiva. Si conoces SWMM, adaptación rápida (días).
+    </td>
+  </tr>
+
+  <tr>
+    <td>Documentación y comunidad</td>
+    <td><span class="best">Excelente.</span> Manuales EPA, foros, swmm5.net, YouTube, publicaciones académicas abundantes.</td>
+    <td><span class="mid-badge">Buena.</span> Documentación Innovyze/Autodesk. Foros propietarios. Cursos de pago.</td>
+    <td><span class="mid-badge">Buena.</span> Bentley Communities, YouTube oficial, tutoriales OpenFlows. Cursos de pago.</td>
+  </tr>
+
+  <tr>
+    <td>Uso en España</td>
+    <td>Administración local, universidades, I+D, proyectos con presupuesto limitado.</td>
+    <td><span class="best">Estándar en grandes concursos</span> — CC.AA., Canal Isabel II, Aigues de Barcelona, FCC Aqualia.</td>
+    <td>Frecuente en consultoría privada con perfil GIS/ArcGIS. Proyectos de mediana escala.</td>
+  </tr>
+
+  <tr>
+    <td>Uso en Latinoamérica</td>
+    <td><span class="best">Muy extendido.</span> Municipios, universidades, EAAB, EPM, EMMAP. Referencia académica.</td>
+    <td>Empresas grandes de servicios. Proyectos con financiación internacional (BID, BM).</td>
+    <td>Extendido en consultoría privada. Muy usado en Colombia, Chile, México.</td>
+  </tr>
+
+  <tr>
+    <td>Cuándo elegirlo</td>
+    <td>Presupuesto limitado, transparencia del motor, automatización con Python, I+D, proyectos sin 2D.</td>
+    <td>Plan director con mapa de inundación 2D, gestión de CSOs, cliente institucional grande.</td>
+    <td>Consultoría con mucho trabajo GIS/ArcGIS, Auto-Design, proyectos 1D sin requisito de 2D.</td>
+  </tr>
+
+  </tbody>
+</table>
+</div>
+
+<p class="footnote">
+  ✦ Las comparaciones de licencias y disponibilidad de funciones corresponden a las versiones disponibles a inicios de 2026. Verificar con los fabricantes para versiones actualizadas.<br>
+  ✦ "Sin 2D nativo" en SWMM y SewerGEMS no implica incapacidad para estudios de inundación, sino que requieren herramientas complementarias (HEC-RAS 2D, PCSWMM, Flood Modeller).<br>
+  ✦ Fuentes: documentación oficial EPA SWMM 5.2, Autodesk InfoWorks ICM Help, Bentley OpenFlows SewerGEMS Help.
+</p>
+
+</body>
+</html>
